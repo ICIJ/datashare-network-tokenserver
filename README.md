@@ -1,4 +1,4 @@
-# datashare-network-tokenserver
+# datashare-network-tokenserver [![CircleCI](https://circleci.com/gh/ICIJ/datashare-network-tokenserver/tree/main.svg?style=svg)](https://circleci.com/gh/ICIJ/datashare-network-tokenserver/tree/main)
 
 A server to issue tokens based on blind signature
 
