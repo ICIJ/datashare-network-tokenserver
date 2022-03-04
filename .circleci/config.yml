@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7
+
+    steps:
+      - checkout
+
+      - run:
+          name: install python-dev
+          command: sudo apt install -y python3-dev
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: install dependencies
+          command: |
+            pipenv install --dev
+
+      - save_cache:
+          paths:
+            - ~/.local/share/virtualenvs
+          key: v1-dependencies-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: run tests
+          command: |
+            pipenv run pytest

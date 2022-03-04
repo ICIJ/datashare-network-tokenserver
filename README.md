@@ -17,4 +17,4 @@ All endpoints should be secured with HTTPS (TLS).
 Those endpoints are protected with JWT
 
 * `GET /commitment`
-* `GET /blind_token
+* `GET /blind_token`
