@@ -10,7 +10,7 @@ sqlalchemy = '*'
 databases = {extras = ['sqlite', 'postgresql'], version = '*'}
 alembic = '*'
 psycopg2 = '*'
-sscred = '*'
+sscred = '0.2.0'
 
 [dev-packages]
 bumpversion = '==0.6.0'

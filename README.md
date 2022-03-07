@@ -16,5 +16,13 @@ All endpoints should be secured with HTTPS (TLS).
 
 Those endpoints are protected with JWT
 
-* `GET /commitment`
-* `GET /blind_token`
+* `POST /commitments?uid=foo&number=3`
+  * parameters : 
+    * number: (int) number of token to generate
+    * uid: (string) user id
+  * returns a commitment list msg pack encoded
+* `POST /tokens?uid=foo`
+  * parameters :
+    * uid: (string) user id
+    * payload: list of pretokens msg pack encoded
+    * returns a token list msg pack encoded
