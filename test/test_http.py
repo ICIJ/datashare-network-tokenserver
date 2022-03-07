@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
@@ -11,24 +12,37 @@ from starlette.testclient import TestClient
 from tokenserver.main import app
 
 
-def test_get_public_key():
-    client = TestClient(app)
+@pytest.fixture
+def pkey():
     params = AbeParam()
     skey, pkey = params.generate_new_key_pair()
     os.environ['TOKEN_SERVER_SKEY'] = packb(skey).hex()
+    return pkey
 
+
+@pytest.fixture
+def client():
+    with TestClient(app) as cli:
+        yield cli
+
+
+def test_get_public_key(pkey, client):
     response = client.get("/publickey")
     assert response.status_code == 200
     assert response.headers.get("content-type") == 'application/x-msgpack'
     assert response.content == packb(pkey)
 
 
-def test_token_generation():
-    client = TestClient(app)
-    params = AbeParam()
-    skey, pkey = params.generate_new_key_pair()
-    os.environ['TOKEN_SERVER_SKEY'] = packb(skey).hex()
+def test_start_server_without_skey():
+    if os.environ.get('TOKEN_SERVER_SKEY'):
+        del os.environ['TOKEN_SERVER_SKEY']
+    with pytest.raises(EnvironmentError):
+        with TestClient(app) as client:
+            assert os.environ.get('TOKEN_SERVER_SKEY') is None
+            client.get("/publickey")
 
+
+def test_token_generation(pkey, client):
     response = client.post("/commitments?number=3&uid=foo")
     assert response.status_code == 200
     assert response.headers.get("content-type") == 'application/x-msgpack'
@@ -61,3 +75,18 @@ def test_token_generation():
     assert isinstance(tokens, list)
     assert len(tokens) == 3
     assert isinstance(tokens[0], SignerResponseMessage)
+
+
+def test_call_commitments_without_uid(pkey, client):
+    response = client.post("/commitments?number=3")
+    assert response.status_code == 400
+
+
+def test_call_tokens_without_invalid_payload(pkey, client):
+    response = client.post("/tokens?uid=foo", data=b'unused payload')
+    assert response.status_code == 409
+
+
+def test_call_tokens_without_uid(pkey, client):
+    response = client.post("/tokens", data=b'unused payload')
+    assert response.status_code == 400
