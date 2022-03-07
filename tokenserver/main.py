@@ -1,6 +1,8 @@
 import os
 from typing import Any, Optional
 
+from redis.asyncio.client import Redis
+
 from starlette.exceptions import HTTPException
 from starlette.routing import Route
 from starlette.applications import Starlette
@@ -10,14 +12,16 @@ from starlette.requests import Request
 from sscred.blind_signature import AbePublicKey, AbePrivateKey, AbeSigner
 from sscred.pack import packb, unpackb
 
+from .redis_session_store import RedisSessionStore
+
 ENVIRON_SECRET_KEY = "TOKEN_SERVER_SKEY"
-memory_repository = dict()
+REDIS_STORE: Optional[RedisSessionStore] = None
 
 SECRET_KEY: Optional[AbePrivateKey] = None
 PUBLIC_KEY: Optional[AbePublicKey] = None
 
 
-def on_startup():
+def init_server_keys():
     global SECRET_KEY
     global PUBLIC_KEY
     skey = os.environ.get(ENVIRON_SECRET_KEY, None)
@@ -25,6 +29,18 @@ def on_startup():
         raise EnvironmentError(f"{ENVIRON_SECRET_KEY} environment variable is not defined")
     SECRET_KEY = unpackb(bytes.fromhex(skey))
     PUBLIC_KEY = SECRET_KEY.public_key()
+
+
+def init_store():
+    global REDIS_STORE
+    url = os.environ.get("TOKEN_SERVER_REDIS_URL", "redis://redis:6379")
+    ttl = int(os.environ.get("TOKEN_SERVER_REDIS_TTL", "30"))
+    redis = Redis.from_url(url)
+    REDIS_STORE = RedisSessionStore(redis, ttl)
+
+
+async def close_redis():
+    await REDIS_STORE.close()
 
 
 async def public_key(_):
@@ -36,22 +52,22 @@ async def commitments(req: Request):
     uid = raise_if_none(req.query_params.get('uid'), 400)
     signer = AbeSigner(SECRET_KEY, PUBLIC_KEY, disable_acl=True)
 
-    commitments = []
-    commitments_internal = []
+    coms = []
+    coms_internal = []
     for _i in range(number):
         com, intern = signer.commit()
-        commitments.append(com)
-        commitments_internal.append(intern)
+        coms.append(com)
+        coms_internal.append(intern)
 
-    memory_repository[uid] = commitments_internal
+    await REDIS_STORE.put(uid, coms_internal)
 
-    return Response(media_type="application/x-msgpack", content=packb(commitments))
+    return Response(media_type="application/x-msgpack", content=packb(coms))
 
 
 async def tokens(req: Request):
     signer = AbeSigner(SECRET_KEY, PUBLIC_KEY, disable_acl=True)
     uid = raise_if_none(req.query_params.get('uid'), 400)
-    commitments_internal = raise_if_none(memory_repository.pop(uid, None), 409)
+    commitments_internal = raise_if_none(await REDIS_STORE.getdel(uid), 409)
     blind_tokens = list()
     for pre_token, internal in zip(unpackb(await req.body()), commitments_internal):
         blind_tokens.append(signer.respond(pre_token, internal))
@@ -70,4 +86,4 @@ routes = [
     Route('/tokens', tokens, methods=['POST']),
 ]
 
-app = Starlette(debug=True, routes=routes, on_startup=[on_startup])
+app = Starlette(debug=True, routes=routes, on_startup=[init_server_keys, init_store], on_shutdown=[close_redis])

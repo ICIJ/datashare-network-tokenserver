@@ -27,6 +27,15 @@ async def test_store_remove(store):
     assert await store.get('test:uid') is None
 
 
+@pytest.mark.asyncio
+async def test_store_getdel(store):
+    commitments = create_commitments(3)
+    await store.put('test:uid', commitments)
+
+    assert commitments == await store.getdel('test:uid')
+    assert await store.getdel('test:uid') is None
+
+
 def create_commitments(number: int):
     params = AbeParam()
     skey, pkey = params.generate_new_key_pair()

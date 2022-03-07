@@ -21,3 +21,13 @@ class RedisSessionStore:
 
     async def remove(self, uid) -> int:
         return await self.redis.delete(uid)
+
+    async def getdel(self, uid) -> List[SignerCommitmentInternalParameters]:
+        pipe = await self.redis.pipeline()
+        await pipe.get(uid)
+        await pipe.delete(uid)
+        content = (await pipe.execute())[0]
+        return unpackb(content) if content else None
+
+    async def close(self):
+        await self.redis.close()
