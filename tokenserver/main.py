@@ -7,7 +7,7 @@ from starlette.applications import Starlette
 from starlette.responses import Response
 from starlette.requests import Request
 
-from sscred.blind_signature import AbeParam, AbePublicKey, AbePrivateKey, AbeSigner
+from sscred.blind_signature import AbePublicKey, AbePrivateKey, AbeSigner
 from sscred.pack import packb, unpackb
 
 ENVIRON_SECRET_KEY = "TOKEN_SERVER_SKEY"
