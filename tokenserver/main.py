@@ -1,7 +1,7 @@
 import os
 from typing import Any, Optional
 
-from redis.asyncio.client import Redis
+from aioredis import Redis
 
 from starlette.exceptions import HTTPException
 from starlette.routing import Route

@@ -1,6 +1,6 @@
 from typing import List
 
-from redis.asyncio.client import Redis
+from aioredis import Redis
 from sscred import SignerCommitmentInternalParameters, packb, unpackb
 
 

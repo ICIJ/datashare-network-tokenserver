@@ -1,5 +1,5 @@
 import pytest
-from redis.asyncio.client import Redis
+from aioredis import Redis
 from sscred import AbeParam, AbeSigner
 
 from tokenserver.redis_session_store import RedisSessionStore

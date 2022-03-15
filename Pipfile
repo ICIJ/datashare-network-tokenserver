@@ -7,7 +7,7 @@ name = 'pypi'
 starlette = '*'
 uvicorn = {extras = ['standard'], version = '*'}
 sscred = '==0.2.0'
-redis = {ref = "v4.2.0rc1", git = "https://github.com/redis/redis-py.git"}
+aioredis = '==2.0.1'
 
 [dev-packages]
 bumpversion = '==0.6.0'
