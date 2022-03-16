@@ -67,7 +67,7 @@ def test_token_generation(pkey, client):
         pre_tokens_internal.append(pre_token_internal)
 
     payload = packb(pre_tokens)
-    response = client.post("/tokens?uid=foo", data=payload)
+    response = client.post("/pretokens?uid=foo", data=payload)
 
     assert response.status_code == 200
     assert response.headers.get("content-type") == 'application/x-msgpack'
@@ -83,10 +83,10 @@ def test_call_commitments_without_uid(pkey, client):
 
 
 def test_call_tokens_without_invalid_payload(pkey, client):
-    response = client.post("/tokens?uid=foo", data=b'unused payload')
+    response = client.post("/pretokens?uid=foo", data=b'unused payload')
     assert response.status_code == 409
 
 
 def test_call_tokens_without_uid(pkey, client):
-    response = client.post("/tokens", data=b'unused payload')
+    response = client.post("/pretokens", data=b'unused payload')
     assert response.status_code == 400

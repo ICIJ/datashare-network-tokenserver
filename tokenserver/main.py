@@ -83,7 +83,7 @@ def raise_if_none(arg: Any, code: int):
 routes = [
     Route('/publickey', public_key),
     Route('/commitments', commitments, methods=['POST']),
-    Route('/tokens', tokens, methods=['POST']),
+    Route('/pretokens', tokens, methods=['POST']),
 ]
 
 app = Starlette(debug=True, routes=routes, on_startup=[init_server_keys, init_store], on_shutdown=[close_redis])
