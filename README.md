@@ -25,7 +25,7 @@ All endpoints should be secured with HTTPS (TLS).
     * number: (int) number of token to generate
     * uid: (string) user id
   * returns a commitment list msg pack encoded
-* `POST /tokens?uid=foo`
+* `POST /pretokens?uid=foo`
   * parameters :
     * uid: (string) user id
     * payload: list of pretokens msg pack encoded
