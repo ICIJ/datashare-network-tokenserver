@@ -1,7 +1,6 @@
 from typing import List
-
 from aioredis import Redis
-from sscred import SignerCommitmentInternalParameters, packb, unpackb
+from sscred import SignerCommitmentInternalState, packb, unpackb
 
 
 class RedisSessionStore:
@@ -9,20 +8,20 @@ class RedisSessionStore:
         self.ttl_sec = ttl_sec
         self.redis = redis
 
-    async def put(self, uid: str, internal_commitments: List[SignerCommitmentInternalParameters]) -> None:
+    async def put(self, uid: str, internal_commitments: List[SignerCommitmentInternalState]) -> None:
         pipe = await self.redis.pipeline()
         await pipe.set(uid, packb(internal_commitments))
         await pipe.expire(uid, self.ttl_sec)
         await pipe.execute()
 
-    async def get(self, uid) -> List[SignerCommitmentInternalParameters]:
+    async def get(self, uid) -> List[SignerCommitmentInternalState]:
         content = await self.redis.get(uid)
         return unpackb(content) if content is not None else None
 
     async def remove(self, uid) -> int:
         return await self.redis.delete(uid)
 
-    async def getdel(self, uid) -> List[SignerCommitmentInternalParameters]:
+    async def getdel(self, uid) -> List[SignerCommitmentInternalState]:
         pipe = await self.redis.pipeline()
         await pipe.get(uid)
         await pipe.delete(uid)
