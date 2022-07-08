@@ -16,6 +16,9 @@ test:
 run:
 		pipenv run uvicorn tokenserver.main:app
 
+genkey:
+		pipenv run python tokenserver/gen_keypair.py
+
 minor:
 		pipenv run bumpversion --commit --tag --current-version ${CURRENT_VERSION} minor tokenserver/__init__.py
 
