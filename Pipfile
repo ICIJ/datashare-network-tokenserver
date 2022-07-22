@@ -6,7 +6,7 @@ name = 'pypi'
 [packages]
 starlette = '*'
 uvicorn = {extras = ['standard'], version = '*'}
-sscred = '==0.2.1'
+sscred = {editable = true, ref = "6689fa7dbe33c176593dc49a82a4e915a1d423f4", git = "https://github.com/spring-epfl/SSCred.git"}
 aioredis = '==2.0.1'
 
 [dev-packages]
