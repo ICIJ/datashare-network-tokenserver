@@ -22,6 +22,7 @@ from starlette_session.backends import AioRedisSessionBackend, BackendType
 
 config = Config(".env")
 SECRET_KEY: AbePrivateKey = config("TOKEN_SERVER_SKEY", cast=lambda x: unpackb(bytes.fromhex(x)))
+NB_TOKENS: int = config("TOKEN_SERVER_DEFAULT_NB_TOKENS", cast=int, default=10)
 PUBLIC_KEY: AbePublicKey = SECRET_KEY.public_key()
 TOKEN_SERVER_REDIS_URL: URL = URL(str(config("TOKEN_SERVER_REDIS_URL", cast=datastructures.URL, default='redis://redis:6379')))
 TOKEN_SERVER_REDIS_TTL: int = config("TOKEN_SERVER_REDIS_TTL", cast=int, default=30)
@@ -50,7 +51,7 @@ async def public_key(_):
 async def commitments(request: Request):
     user = _get_user(request)
     signer = AbeSigner(SECRET_KEY, PUBLIC_KEY, disable_acl=True)
-    nb_tokens = user.get('nb_tokens', 3)
+    nb_tokens = user.get('nb_tokens', NB_TOKENS)
     coms = []
     coms_internal = []
     for _i in range(nb_tokens):
