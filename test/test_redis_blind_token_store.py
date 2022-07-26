@@ -2,13 +2,13 @@ import pytest
 from aioredis import Redis
 from sscred import AbeParam, AbeSigner
 
-from tokenserver.redis_session_store import RedisSessionStore
+from tokenserver.redis_session_store import RedisBlindTokenStore
 
 
 @pytest.fixture
 def store():
     redis = Redis(host='redis')
-    store = RedisSessionStore(redis, ttl_sec=5)
+    store = RedisBlindTokenStore(redis, ttl_sec=5)
     return store
 
 

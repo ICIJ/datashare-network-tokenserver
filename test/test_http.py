@@ -1,92 +1,112 @@
-import os
-
+import asyncio
+import json
+import httpx
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
 )
-from sscred.blind_signature import AbeParam, AbeUser, SignerCommitMessage, SignerResponseMessage
+from test.server import UvicornTestServer
+import itsdangerous
+from sscred.blind_signature import AbeUser, SignerCommitMessage, SignerResponseMessage
 from sscred.pack import packb, unpackb
-from starlette.testclient import TestClient
+from starlette.config import environ
+import pytest_asyncio
+from base64 import b64encode
+from redis.asyncio import Redis
 
-from tokenserver.main import app
+from tokenserver.main import setup_app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope='module')
 def pkey():
-    params = AbeParam()
-    skey, pkey = params.generate_new_key_pair()
-    os.environ['TOKEN_SERVER_SKEY'] = packb(skey).hex()
-    return pkey
+    return unpackb(bytes.fromhex(environ['TOKEN_SERVER_SKEY'])).public_key()
 
 
-@pytest.fixture
-def client():
-    with TestClient(app) as cli:
-        yield cli
+@pytest_asyncio.fixture
+async def auth_user():
+    test_redis = Redis.from_url('redis://redis:6379')
+    await test_redis.set('my_session_id', packb({"user": {"username": "johndoe", "hashed_password": "fakehashedsecret", "disabled": False}}))
+    yield
+    await test_redis.delete('my_session_id')
+    await test_redis.close()
 
 
-def test_get_public_key(pkey, client):
-    response = client.get("/publickey")
-    assert response.status_code == 200
-    assert response.headers.get("content-type") == 'application/x-msgpack'
-    assert response.content == packb(pkey)
+@pytest_asyncio.fixture
+async def with_server():
+    token_server = UvicornTestServer(setup_app(), port=12345)
+    await token_server.up()
+    yield
+    await token_server.down()
 
 
-def test_start_server_without_skey():
-    if os.environ.get('TOKEN_SERVER_SKEY'):
-        del os.environ['TOKEN_SERVER_SKEY']
-    with pytest.raises(EnvironmentError):
-        with TestClient(app) as client:
-            assert os.environ.get('TOKEN_SERVER_SKEY') is None
-            client.get("/publickey")
+def sign_cookie(cookie_value: str) -> bytes:
+    data = b64encode(json.dumps({'_cssid': cookie_value}).encode())
+    signer = itsdangerous.TimestampSigner("secret")
+    return signer.sign(data)
 
 
-def test_token_generation(pkey, client):
-    response = client.post("/commitments?number=3&uid=foo")
-    assert response.status_code == 200
-    assert response.headers.get("content-type") == 'application/x-msgpack'
-
-    commitments = unpackb(response.content)
-    assert isinstance(commitments, list)
-    assert len(commitments) == 3
-    assert isinstance(commitments[0], SignerCommitMessage)
-
-    user = AbeUser(pkey)
-    pre_tokens = []
-    pre_tokens_internal = []
-    for com in commitments:
-        ephemeral_secret_key = Ed25519PrivateKey.generate()
-        ephemeral_public_key_raw = ephemeral_secret_key.public_key().public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        )
-
-        pre_token, pre_token_internal = user.compute_blind_challenge(com, ephemeral_public_key_raw)
-        pre_tokens.append(pre_token)
-        pre_tokens_internal.append(pre_token_internal)
-
-    payload = packb(pre_tokens)
-    response = client.post("/pretokens?uid=foo", data=payload)
-
-    assert response.status_code == 200
-    assert response.headers.get("content-type") == 'application/x-msgpack'
-    tokens = unpackb(response.content)
-    assert isinstance(tokens, list)
-    assert len(tokens) == 3
-    assert isinstance(tokens[0], SignerResponseMessage)
+@pytest.mark.asyncio
+async def test_call_tokens_with_invalid_payload(with_server, auth_user):
+    async with httpx.AsyncClient() as ac:
+        response = await ac.post("http://localhost:12345/pretokens?uid=foo", data=b'unused payload', cookies={'_session': sign_cookie('my_session_id').decode()})
+        assert response.status_code == 409
 
 
-def test_call_commitments_without_uid(pkey, client):
-    response = client.post("/commitments?number=3")
-    assert response.status_code == 400
+@pytest.mark.asyncio
+async def test_call_commitments_without_session(with_server):
+    async with httpx.AsyncClient() as ac:
+        response = await ac.post("http://localhost:12345/commitments?number=3")
+        assert response.status_code == 302
 
 
-def test_call_tokens_without_invalid_payload(pkey, client):
-    response = client.post("/pretokens?uid=foo", data=b'unused payload')
-    assert response.status_code == 409
+@pytest.mark.asyncio
+async def test_call_tokens_without_session(with_server):
+    async with httpx.AsyncClient() as ac:
+        response = await ac.post("http://localhost:12345/pretokens", data=b'unused payload')
+        assert response.status_code == 302
 
 
-def test_call_tokens_without_uid(pkey, client):
-    response = client.post("/pretokens", data=b'unused payload')
-    assert response.status_code == 400
+@pytest.mark.asyncio
+async def test_token_generation(pkey, with_server, auth_user):
+    async with httpx.AsyncClient() as ac:
+        response = await ac.post("http://localhost:12345/commitments?number=3&uid=foo", cookies={'_session': sign_cookie('my_session_id').decode()})
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == 'application/x-msgpack'
+
+        commitments = unpackb(response.content)
+        assert isinstance(commitments, list)
+        assert len(commitments) == 3
+        assert isinstance(commitments[0], SignerCommitMessage)
+
+        user = AbeUser(pkey)
+        pre_tokens = []
+        pre_tokens_internal = []
+        for com in commitments:
+            ephemeral_secret_key = Ed25519PrivateKey.generate()
+            ephemeral_public_key_raw = ephemeral_secret_key.public_key().public_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw
+            )
+
+            pre_token, pre_token_internal = user.compute_blind_challenge(com, ephemeral_public_key_raw)
+            pre_tokens.append(pre_token)
+            pre_tokens_internal.append(pre_token_internal)
+
+        payload = packb(pre_tokens)
+        response = await ac.post("http://localhost:12345/pretokens?uid=foo", data=payload)
+
+        assert response.status_code == 200
+        assert response.headers.get("content-type") == 'application/x-msgpack'
+        tokens = unpackb(response.content)
+        assert isinstance(tokens, list)
+        assert len(tokens) == 3
+        assert isinstance(tokens[0], SignerResponseMessage)
+

@@ -5,9 +5,12 @@ name = 'pypi'
 
 [packages]
 starlette = '*'
+starlette-session = '*'
 uvicorn = {extras = ['standard'], version = '*'}
 sscred = {editable = true, ref = "6689fa7dbe33c176593dc49a82a4e915a1d423f4", git = "https://github.com/spring-epfl/SSCred.git"}
-aioredis = '==2.0.1'
+redis = '==4.3.4'
+Authlib = "==1.0.0"
+httpx = "*"
 
 [dev-packages]
 bumpversion = '==0.6.0'
@@ -16,6 +19,8 @@ twine = '==3.2.0'
 pytest = '*'
 pytest-timeout = '*'
 pytest-asyncio = '*'
+fastapi = {extras = ["all"], version = "*"}
+fastapi-sessions = "*"
 
 [requires]
 python_version = '3'

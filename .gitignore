@@ -7,7 +7,7 @@ __pycache__
 *.pyc
 build
 dist
-.env
+test/conftest.py
 .cache
 tmp
 ./*.csv

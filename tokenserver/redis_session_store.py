@@ -3,7 +3,7 @@ from aioredis import Redis
 from sscred import SignerCommitmentInternalState, packb, unpackb
 
 
-class RedisSessionStore:
+class RedisBlindTokenStore:
     def __init__(self, redis: Redis, ttl_sec: int) -> None:
         self.ttl_sec = ttl_sec
         self.redis = redis
