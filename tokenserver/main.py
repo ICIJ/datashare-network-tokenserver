@@ -20,13 +20,19 @@ from sscred.pack import packb, unpackb
 from starlette_session import SessionMiddleware
 from starlette_session.backends import AioRedisSessionBackend, BackendType
 
+
 config = Config(".env")
 SECRET_KEY: AbePrivateKey = config("TOKEN_SERVER_SKEY", cast=lambda x: unpackb(bytes.fromhex(x)))
 NB_TOKENS: int = config("TOKEN_SERVER_DEFAULT_NB_TOKENS", cast=int, default=10)
 PUBLIC_KEY: AbePublicKey = SECRET_KEY.public_key()
-TOKEN_SERVER_REDIS_URL: URL = URL(str(config("TOKEN_SERVER_REDIS_URL", cast=datastructures.URL, default='redis://redis:6379')))
-TOKEN_SERVER_REDIS_TTL: int = config("TOKEN_SERVER_REDIS_TTL", cast=int, default=30)
+REDIS_URL: URL = URL(str(config("TOKEN_SERVER_REDIS_URL", cast=datastructures.URL, default='redis://redis:6379')))
+REDIS_TTL: int = config("TOKEN_SERVER_REDIS_TTL", cast=int, default=30)
+COOKIE_SKEY: Secret = config("TOKEN_SERVER_COOKIE_SKEY", cast=Secret)
+COOKIE_NAME: Secret = config("TOKEN_SERVER_COOKIE_NAME", default='_session')
 
+OAUTH2_AUTHORIZE_URL = config("TOKEN_SERVER_OAUTH2_AUTHORIZE_URL", default="/oauth/authorize")
+OAUTH2_TOKEN_URL = config("TOKEN_SERVER_OAUTH2_TOKEN_URL", default="/oauth/token")
+OAUTH2_USER_URL = config("TOKEN_SERVER_OAUTH2_USER_URL", default="/api/me.json")
 OAUTH2_SERVER_URL: URL = URL(str(config("TOKEN_SERVER_OAUTH2_SERVER_URL", cast=datastructures.URL)))
 OAUTH2_CLIENT_ID = config('TOKEN_SERVER_OAUTH2_CLIENT_ID', cast=str)
 OAUTH2_CLIENT_SECRET = config('TOKEN_SERVER_OAUTH2_CLIENT_SECRET', cast=Secret)
@@ -87,14 +93,14 @@ def _get_user(request: Request) -> dict:
 
 async def login(request: Request):
     oauth_client = create_oauth_client(request)
-    url, _state = oauth_client.create_authorization_url(f'{str(OAUTH2_SERVER_URL)}/oauth/authorize')
+    url, _state = oauth_client.create_authorization_url(f'{str(OAUTH2_SERVER_URL)}{OAUTH2_AUTHORIZE_URL}')
     return RedirectResponse(status_code=302, url=url)
 
 
 async def callback(request: Request):
     oauth_client = create_oauth_client(request)
-    await oauth_client.fetch_token('/oauth/token', authorization_response=str(request.url))
-    resp = await oauth_client.get('/api/me.json')
+    await oauth_client.fetch_token(OAUTH2_TOKEN_URL, authorization_response=str(request.url))
+    resp = await oauth_client.get(OAUTH2_USER_URL)
     request.session['user'] = resp.json()
     return Response()
 
@@ -128,7 +134,7 @@ routes = [
 
 
 def setup_app():
-    redis = Redis.from_url(str(TOKEN_SERVER_REDIS_URL))
+    redis = Redis.from_url(str(REDIS_URL))
 
     async def on_startup():
         await redis.initialize()
@@ -138,7 +144,7 @@ def setup_app():
 
     middlewares = [
         Middleware(SessionMiddleware,
-                   secret_key="secret",
+                   secret_key=COOKIE_SKEY,
                    cookie_name="_session",
                    backend_type=BackendType.aioRedis,
                    custom_session_backend=JSONAioRedisSessionBackend(redis)
