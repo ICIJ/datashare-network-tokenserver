@@ -125,8 +125,8 @@ async def error_handler(request: Request, exc: HTTPException):
 
 
 routes = [
-    Route('/login', login, methods=['GET']),
-    Route('/callback', callback, methods=['GET']),
+    Route('/auth/login', login, methods=['GET']),
+    Route('/auth/callback', callback, methods=['GET']),
     Route('/publickey', public_key, methods=['GET']),
     Route('/commitments', commitments, methods=['POST']),
     Route('/pretokens', tokens, methods=['POST']),

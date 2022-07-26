@@ -44,7 +44,7 @@ async def startup_and_shutdown_oauth_server():
 @pytest.mark.asyncio
 async def test_get_callback_page_should_init_session(startup_and_shutdown_oauth_server):
     async with httpx.AsyncClient() as ac:
-        response = await ac.get("http://localhost:12345/login", follow_redirects=True)
+        response = await ac.get("http://localhost:12345/auth/login", follow_redirects=True)
         assert response.status_code == 200
         assert 'text/html' in response.headers.get('content-type')
         resp_post = await ac.post(f"http://localhost:12346/signin", data={
@@ -52,7 +52,7 @@ async def test_get_callback_page_should_init_session(startup_and_shutdown_oauth_
             "password": 'secret',
         })
         assert resp_post.status_code == 302
-        assert resp_post.headers.get("location").startswith("http://localhost:12345/callback")
+        assert resp_post.headers.get("location").startswith("http://localhost:12345/auth/callback")
         response = await ac.get(resp_post.headers.get("location"))
         assert response.status_code == 200
 
@@ -72,12 +72,12 @@ async def test_get_public_key(pkey, client):
 async def test_get_authenticated_url_should_redirect_to_login_page(client):
     response = client.post("/commitments?number=3")
     assert response.status_code == 302
-    assert response.headers.get("location").startswith("http://testserver/login")
+    assert response.headers.get("location").startswith("http://testserver/auth/login")
 
 
 @pytest.mark.asyncio
 async def test_get_login_page_should_redirect_to_identity_manager(client):
-    response = client.get("/login", allow_redirects=False)
+    response = client.get("/auth/login", allow_redirects=False)
     assert response.status_code == 302
     assert response.headers.get("location").startswith("http://localhost:12346/oauth/authorize?response_type=code&client_id=oauth2_client_id")
 

@@ -112,7 +112,7 @@ async def signin(request: Request, form_data: OAuth2PasswordRequestForm = Depend
     token = BearerToken(token_generator)(user, 'authenticate')
     TOKEN_MAP[token['access_token']] = token
     USER_MAP[token['access_token']] = user_dict
-    response.headers['Location'] = f"http://localhost:12345/callback?code={token['access_token']}&state={request.session['state']}"
+    response.headers['Location'] = f"http://localhost:12345/auth/callback?code={token['access_token']}&state={request.session['state']}"
     return response
 
 
