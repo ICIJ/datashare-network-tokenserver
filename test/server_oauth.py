@@ -11,12 +11,12 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
-from yarl import URL
+
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="foo")
 
-TOKEN_SERVER_HOST = URL(f"http://localhost:{os.getenv('TOKEN_SERVER_PORT', 12346)}")
+TOKEN_SERVER_HOST = f"http://localhost:{os.getenv('TOKEN_SERVER_PORT', 12346)}"
 TOKEN_SERVER_NBTOKENS = os.getenv('TOKEN_SERVER_NBTOKENS', 3)
 
 TOKEN_MAP = dict()
