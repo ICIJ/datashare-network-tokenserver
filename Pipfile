@@ -19,8 +19,8 @@ twine = '==3.2.0'
 pytest = '*'
 pytest-timeout = '*'
 pytest-asyncio = '*'
-fastapi = {extras = ["all"], version = "*"}
-fastapi-sessions = "*"
+fastapi = {extras = ["all"], version = "0.75.0"}
+fastapi-sessions = "==0.3.2"
 
 [requires]
 python_version = '3'
