@@ -1,5 +1,4 @@
 import asyncio
-import importlib
 import pytest
 from sscred.pack import packb, unpackb
 import pytest_asyncio
