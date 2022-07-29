@@ -6,7 +6,7 @@ import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 from test.server import UvicornTestServer
-from test.server_oauth import app
+from test.server_oauth2 import app
 
 
 @pytest_asyncio.fixture
