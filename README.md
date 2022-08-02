@@ -22,12 +22,12 @@ All endpoints should be secured with HTTPS (TLS).
 
 * `GET /publickey`
   * returns the server public key
-* `POST /commitments
+* `POST /commitments`
   * parameters : 
     * number: (int) number of token to generate
     * uid: (string) user id
   * returns a commitment list msg pack encoded
-* `POST /pretokens
+* `POST /pretokens`
   * parameters :
     * uid: (string) user id
     * payload: list of pretokens msg pack encoded
