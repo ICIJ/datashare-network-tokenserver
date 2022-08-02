@@ -30,8 +30,8 @@ def client():
 
 @pytest_asyncio.fixture
 async def startup_and_shutdown_oauth_server():
-    from test.server import UvicornTestServer
-    id_server = UvicornTestServer('test.server_oauth2:app', port=12346)
+    from tokenserver.test.server import UvicornTestServer
+    id_server = UvicornTestServer('tokenserver.test.server_oauth2:app', port=12346)
     token_server = UvicornTestServer(setup_app(), port=12345)
     await id_server.up()
     await token_server.up()

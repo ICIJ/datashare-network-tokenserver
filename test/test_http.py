@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
 )
-from test.server import UvicornTestServer
+from tokenserver.test.server import UvicornTestServer
 import itsdangerous
 from sscred.blind_signature import AbeUser, SignerCommitMessage, SignerResponseMessage
 from sscred.pack import packb, unpackb

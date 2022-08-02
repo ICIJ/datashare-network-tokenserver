@@ -1,6 +1,6 @@
 import pytest
 
-from test.server import UvicornTestServer
+from tokenserver.test.server import UvicornTestServer
 
 
 @pytest.mark.asyncio
