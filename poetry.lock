@@ -709,9 +709,9 @@ petlib = {git = "https://github.com/spring-epfl/petlib.git"}
 
 [package.source]
 type = "git"
-url = "https://git@github.com/ICIJ/SSCred.git"
-reference = "HEAD"
-resolved_reference = "1bfd4ad1b1565046d238b9f46bc342bf426f6c40"
+url = "https://github.com/ICIJ/SSCred.git"
+reference = "0.3.4"
+resolved_reference = "89dbf347267acb81efc8b98a381c5e4a6bbde042"
 
 [[package]]
 name = "starlette"
@@ -799,4 +799,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "f00df3077d9423b234491cefc4b9e678452ef0b17a44e4758b35fb3368f6ba8f"
+content-hash = "544ed5162c2ad4826fd10f8fc39f830657708f06ec73f9c81546cb865dbf1c18"
