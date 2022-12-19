@@ -20,7 +20,8 @@ from tokenserver.main import setup_app
 
 @pytest.fixture(scope="session")
 def event_loop():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
@@ -56,7 +57,7 @@ def sign_cookie(cookie_value: str) -> bytes:
 @pytest.mark.asyncio
 async def test_call_tokens_with_invalid_payload(with_server, auth_user):
     async with httpx.AsyncClient() as ac:
-        response = await ac.post("http://localhost:12345/pretokens?uid=foo", data=b'unused payload', cookies={'_session': sign_cookie('my_session_id').decode()})
+        response = await ac.post("http://localhost:12345/pretokens?uid=foo", content=b'unused payload', cookies={'_session': sign_cookie('my_session_id').decode()})
         assert response.status_code == 409
 
 
@@ -70,7 +71,7 @@ async def test_call_commitments_without_session(with_server):
 @pytest.mark.asyncio
 async def test_call_tokens_without_session(with_server):
     async with httpx.AsyncClient() as ac:
-        response = await ac.post("http://localhost:12345/pretokens", data=b'unused payload')
+        response = await ac.post("http://localhost:12345/pretokens", content=b'unused payload')
         assert response.status_code == 302
 
 
@@ -101,7 +102,7 @@ async def test_token_generation(pkey, with_server, auth_user):
             pre_tokens_internal.append(pre_token_internal)
 
         payload = packb(pre_tokens)
-        response = await ac.post("http://localhost:12345/pretokens?uid=foo", data=payload)
+        response = await ac.post("http://localhost:12345/pretokens?uid=foo", content=payload)
 
         assert response.status_code == 200
         assert response.headers.get("content-type") == 'application/x-msgpack'

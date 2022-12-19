@@ -6,33 +6,48 @@ It is based on springlab@EPFL [SScred](https://github.com/spring-epfl/SSCred) ba
 
 It will need an Identification Server OAuth2 compatible.
 
-## Configuration 
+To develop, [install Poetry](https://python-poetry.org/docs/#installation) then just run:
+
+```
+make install
+make tests
+```
+
+## Configuration
 
 Configuration is provided with environment variables :
 
-* TOKEN_SERVER_REDIS_URL: redis url (default: `redis://redis`)
-* TOKEN_SERVER_REDIS_TTL: time to live for commitments internal parameters (default 30s)
-* TOKEN_SERVER_SKEY: master secret key for the server encoded in [msgpack](https://msgpack.org/) hex string
-
-
+- TOKEN_SERVER_REDIS_URL: redis url (default: `redis://redis`)
+- TOKEN_SERVER_REDIS_TTL: time to live for commitments internal parameters (default 30s)
+- TOKEN_SERVER_SKEY: master secret key for the server encoded in [msgpack](https://msgpack.org/) hex string
 
 ## Endpoints
 
 All endpoints should be secured with HTTPS (TLS).
 
-* `GET /publickey`
-  * returns the server public key
-* `POST /commitments`
-  * parameters : 
-    * number: (int) number of token to generate
-    * uid: (string) user id
-  * returns a commitment list msg pack encoded
-* `POST /pretokens`
-  * parameters :
-    * uid: (string) user id
-    * payload: list of pretokens msg pack encoded
-    * returns a token list msg pack encoded
-* `GET /auth/login`
-* `GET /auth/callback`
-  * parameters : 
-    * url with code request parameter to finalize oauth2 authentication
+- `GET /publickey`
+  - returns the server public key
+- `POST /commitments`
+  - parameters :
+    - number: (int) number of token to generate
+    - uid: (string) user id
+  - returns a commitment list msg pack encoded
+- `POST /pretokens`
+  - parameters :
+    - uid: (string) user id
+    - payload: list of pretokens msg pack encoded
+    - returns a token list msg pack encoded
+- `GET /auth/login`
+- `GET /auth/callback`
+  - parameters :
+    - url with code request parameter to finalize oauth2 authentication
+
+## Release
+
+Mark the version (choose the correct one following [semver](https://semver.org/)):
+
+```
+make patch
+make minor
+make major
+```

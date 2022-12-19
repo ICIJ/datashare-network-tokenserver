@@ -11,7 +11,8 @@ from tokenserver.main import setup_app
 
 @pytest.fixture(scope="session")
 def event_loop():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
@@ -69,14 +70,14 @@ async def test_get_public_key(pkey, client):
 
 @pytest.mark.asyncio
 async def test_get_authenticated_url_should_redirect_to_login_page(client):
-    response = client.post("/commitments?number=3")
+    response = client.post("/commitments?number=3", follow_redirects=False)
     assert response.status_code == 302
     assert response.headers.get("location").startswith("http://testserver/auth/login")
 
 
 @pytest.mark.asyncio
 async def test_get_login_page_should_redirect_to_identity_manager(client):
-    response = client.get("/auth/login", allow_redirects=False)
+    response = client.get("/auth/login", follow_redirects=False)
     assert response.status_code == 302
     assert response.headers.get("location").startswith("http://localhost:12346/oauth/authorize?response_type=code&client_id=oauth2_client_id")
 

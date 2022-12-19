@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "datashare-network-tokenserver"
+version = "1.0.0"
+description = "Datashare Network Token Server"
+authors = ["ICIJ <engineering@icij.org>"]
+license = "GNU Affero General Public License v3"
+readme = "README.md"
+packages = [{include = "tokenserver"}]
+keywords=['datashare', 'server', 'network', 'cryptography', 'authentication']
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography"
+]
+[tool.poetry.dependencies]
+python = "^3.8"
+starlette = "^0.23.1"
+starlette-session = "^0.4.3"
+redis = "^4.4.0"
+authlib = "^1.2.0"
+httpx = "^0.23.1"
+sscred = {git = "https://git@github.com/ICIJ/SSCred.git", tag = "0.3.4"}
+uvicorn = {extras = ["standart"], version = "^0.20.0"}
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+pytest-timeout = "^2.1.0"
+pytest-asyncio = "^0.20.3"
+python-multipart = "^0.0.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,38 +1,44 @@
-CURRENT_VERSION ?= `pipenv run python setup.py --version`
 DOCKER_NAME = datashare-network-tokenserver
+CURRENT_VERSION ?= `poetry version -s`
+SEMVERS := major minor patch
 
 clean:
 		find . -name "*.pyc" -exec rm -rf {} \;
 		rm -rf dist *.egg-info __pycache__
 
-install: install_pip
+install: install_poetry
 
-install_pip:
-		pipenv install -d
+install_dev: install_poetry --with dev
 
-test:
-		pipenv run pytest
+install_poetry:
+		poetry install
+
+tests:
+		poetry run pytest
 
 run:
-		pipenv run uvicorn tokenserver.main:app
+		poetry run uvicorn tokenserver.main:app
 
 genkey:
-		pipenv run python tokenserver/gen_keypair.py
+		poetry run python tokenserver/gen_keypair.py
 
-minor:
-		pipenv run bumpversion --commit --tag --current-version ${CURRENT_VERSION} minor tokenserver/__init__.py
+tag_version: 
+		git commit -m "build: bump to ${CURRENT_VERSION}" pyproject.toml
+		git tag ${CURRENT_VERSION}
 
-major:
-		pipenv run bumpversion --commit --tag --current-version ${CURRENT_VERSION} major tokenserver/__init__.py
-
-patch:
-		pipenv run bumpversion --commit --tag --current-version ${CURRENT_VERSION} patch tokenserver/__init__.py
+$(SEMVERS):
+		poetry version $@
+		$(MAKE) tag_version
+		
+set_version:
+		poetry version ${CURRENT_VERSION}
+		$(MAKE) tag_version
 
 package:
-		pipenv run python setup.py sdist bdist_wheel
+		poetry build
 
-distribute: package
-		pipenv run twine upload dist/*
+distribute:
+		poetry publish --build
 
 docker-publish: docker-build docker-tag docker-push
 
