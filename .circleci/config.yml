@@ -34,4 +34,4 @@ jobs:
       - run:
           name: run tests
           command: |
-            pipenv run pytest
+            poetry run pytest
