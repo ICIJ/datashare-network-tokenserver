@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "datashare-network-tokenserver"
-version = "1.0.4"
+version = "1.0.5"
 description = "Datashare Network Token Server"
 authors = ["ICIJ <engineering@icij.org>"]
 license = "GNU Affero General Public License v3"
