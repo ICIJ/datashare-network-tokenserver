@@ -72,7 +72,7 @@ async def test_call_commitments_without_session(with_server):
 async def test_call_tokens_without_session(with_server):
     async with httpx.AsyncClient() as ac:
         response = await ac.post("http://localhost:12345/pretokens", content=b'unused payload')
-        assert response.status_code == 302
+        assert response.status_code == 409
 
 
 @pytest.mark.asyncio

@@ -65,15 +65,14 @@ async def commitments(request: Request):
         coms.append(com)
         coms_internal.append(intern)
 
-    request.session[user.get('username')] = coms_internal
+    request.session['coms_internal'] = coms_internal
 
     return Response(media_type="application/x-msgpack", content=packb(coms))
 
 
 async def tokens(request: Request):
-    user = _get_user(request)
     signer = AbeSigner(SECRET_KEY, PUBLIC_KEY, disable_acl=True)
-    commitments_internal = request.session.pop(user.get('username'), None)
+    commitments_internal = request.session.pop("coms_internal", None)
 
     if commitments_internal is None:
         return Response(status_code=409)
